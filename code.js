@@ -1,73 +1,40 @@
-function timerFinished() {
-  //Disable GPS
-  digitalWrite(C4,0);
-  // light the red LED for a second to signal that we're done
-  console.log("Timer finished");
+function stopGPS(){
+console.log("Disabling GPS...");
+digitalWrite(C4,0);
 }
 
-function startTimer(time) {
-  // clear the current timer (if there was one)
-  if (timerInterval!==undefined)
-    clearInterval(timerInterval);
-  timerInterval = undefined;
-  // if there was a time (it wasn't just blank), start the timer
-  if (time>0) {
-    console.log("Start "+time+" sec counter");
-    timerCount = time;
-    // Call this every second...
-    timerInterval = setInterval(function() {
-      // decrement our counter
-      timerCount--;
-      if (timerCount<=0) {
-        // if we reached zero, stop our timer and call timerFinished()
-        clearInterval(timerInterval);
-        timerInterval = undefined;
-        timerFinished();
-      } else {
-        // otherwise just blink the green LED
-        digitalPulse(LED3, 1, 100);
-      }
-    }, 1000);
-  }
-}
 
-function startGPS()
-{
-  
-}
-
-function stopGPS()
-{
-  
+function startGPS(){
+console.log("Starting GPS...");
+pinMode(C4,"output");
+digitalWrite(C4,1);
+//After 10 seconds disable the GPS
+setTimeout(function (e) { stopGPS(); }, 10000);
 }
 
 function onInit() {
-pinMode(C4,"output");
-digitalWrite(C4,1);
-startTimer(10);
-setTimeout(function () { onInit(); }, 20000);
+startGPS();
+setTimeout(function (e) { onInit(); }, 30000);
 }
 
 
 
-
-
-console.log("Starting up...");
+console.log("Starting up Scripts...");
 onInit();
-//Every 20 minutes re-run the init
+
 Serial4.setup(9600);
 var cmd ="";
-var timerInterval;
-var timerCount;
 
 
 function parse(e){
   //Turn the string into an array
   var temp = e.split(',');
-  
  // print(temp[0]);
   if (e.indexOf('$GPGGA') != -1)
   {
+digitalPulse(LED1,1,100);
+digitalPulse(LED2,1,100);
+digitalPulse(LED3,1,100);
 var sentence = temp.join();
   console.log(sentence);
     //Parse Time
@@ -99,12 +66,3 @@ Serial4.onData(function (e) {
         cmd += e.data;
       }
 });
-
-
-
-
-
-
-
-
-
