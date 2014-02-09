@@ -1,40 +1,53 @@
-function stopGPS(){
-console.log("Disabling GPS...");
-digitalWrite(C4,0);
-}
-
-
-function startGPS(){
-console.log("Starting GPS...");
-pinMode(C4,"output");
-digitalWrite(C4,1);
-//After 10 seconds disable the GPS
-setTimeout(function (e) { stopGPS(); }, 10000);
-}
-
-function onInit() {
-startGPS();
-setTimeout(function (e) { onInit(); }, 30000);
-}
-
-
-
-console.log("Starting up Scripts...");
-onInit();
 
 Serial4.setup(9600);
 var cmd ="";
 
 
+//Stop our GPS using the enable pin
+function stopGPS(){
+console.log("Disabling GPS...");
+digitalWrite(C4,0);
+}
+
+//Start our GPS using the enable pin
+function startGPS(){
+console.log("Starting GPS...");
+pinMode(C4,"output");
+digitalWrite(C4,1);
+//After 120 seconds disable the GPS
+setTimeout(function (e) { stopGPS(); }, 120000);
+}
+
+//Startup function
+function onInit() {
+startGPS();
+  //Check for our location every...
+setTimeout(function (e) { onInit(); }, 240000);
+}
+
+
+//SMS Sending Script
+function sendSMS(input){
+console.log("SMS TEXT: ");
+console.log(input);
+}
+
+
+//Startup Function Call
+onInit();
+
+
+
+//Parse the GPS strings
 function parse(e){
   //Turn the string into an array
   var temp = e.split(',');
  // print(temp[0]);
   if (e.indexOf('$GPGGA') != -1)
   {
-digitalPulse(LED1,1,100);
-digitalPulse(LED2,1,100);
-digitalPulse(LED3,1,100);
+//digitalPulse(LED1,1,100);
+//digitalPulse(LED2,1,100);
+//digitalPulse(LED3,1,100);
 var sentence = temp.join();
   console.log(sentence);
     //Parse Time
@@ -50,14 +63,17 @@ var sentence = temp.join();
       //Disable the GPS as we had a fix
       console.log("Fix Found, Disabling GPS...");
       digitalWrite(C4,0);
+      var sms_string = temp[2]+','+temp[3]+','+temp[4]+','+temp[5];
+      sendSMS(sms_string);
     }
   }
 }
 
+
+//Receive data from GPS & turn in to a string
 Serial4.onData(function (e) {
        if (e.data=="\r")
       {
-        //print(cmd);
         parse(cmd);
         cmd="";
       }
@@ -66,3 +82,11 @@ Serial4.onData(function (e) {
         cmd += e.data;
       }
 });
+
+
+
+
+
+
+
+
