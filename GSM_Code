@@ -1,0 +1,63 @@
+var cmd="";
+var issued_command="";
+//Parse response v2
+function parse(buffer){
+  var line = buffer.toString().substring(0, buffer.length - 1);
+  //Remove anything remotely blank or echoey
+  if(line.length < 2 || line.indexOf(">")===0 || issued_command===line){
+     return;
+  }
+  issued_command="";
+  //SMS Received
+  if(line.indexOf("+CMTI")>0){
+     console.log("SMS Received");
+     }
+  
+  //Response Received
+  console.log("Parsed: " + line);
+}
+//Serial on data v2
+Serial4.on('data',function(data){
+cmd += data;
+  var id = cmd.indexOf("\n");
+  while (id>=0){
+  var line = cmd.substr(0,id);
+  cmd=cmd.substr(id+1);
+  parse(line);
+  id=cmd.indexOf("\n");
+  }
+});
+function Send_SMS(text)
+{
+  Start_GSM();
+  setTimeout(function(){send(text);},10000);
+}
+//Start the GSM Module
+function Start_GSM() {
+  Serial4.setup(9600);
+  console.log("GSM Starting...");
+  pinMode(C0,"output");
+  digitalPulse(C0,1,2000);
+}
+function Stop_GSM(){
+pinMode(C0,"output");
+digitalPulse(C0,1,2000);
+}
+function send(input){
+    setTimeout(function(){send_command("AT+CMGS=\"XXXXXXXXXX\"\r");},2000);
+    setTimeout(function(){send_command(input);},3000);
+  setTimeout(function(){send_command("\x1A\r");},3500);
+  setTimeout(function(){Stop_GSM();},10000);
+}
+function send_command(command){
+//Set the command that we are sending to issue_command for later parse out
+issued_command=command;
+//Send the command to serial port connected to GSM
+  Serial4.write(command);
+//Output what we sent to console
+  console.log("Command Sent:" + command);
+}
+function onInit(){
+Send_SMS("Heyyyy!");
+}
+onInit();
