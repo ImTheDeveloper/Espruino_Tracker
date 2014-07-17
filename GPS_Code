@@ -1,0 +1,57 @@
+Serial4.setup(9600,{tx:C10,rx:C11});
+var SleepDuration = null;
+var SearchDuration = null;
+//var foundFix = 0;
+var gps = undefined;
+
+function Start_GPS(){
+  setDeepSleep(0);
+  console.log("Starting GPS...");
+  //Reset fix found
+//  foundFix=0;
+  
+  //After 120 seconds disable the GPS regardless
+  if (SearchDuration) clearTimeout(SearchDuration);
+  SearchDuration = setTimeout(function (e) { SearchDuration=undefined; Stop_GPS(); }, 60000);
+ 
+  //Set enable pin mode
+  pinMode(A9,'output');
+  
+  //Set enable pin to high
+  digitalWrite(A9,1);
+}
+
+function Stop_GPS(){
+  if (SearchDuration) {
+    clearTimeout(SearchDuration);
+    SearchDuration = undefined;
+  }
+  digitalWrite(A9,0);
+  console.log("Disabling GPS...");
+  //Set deep sleep
+  setDeepSleep(1);
+}
+
+function onInit(){
+  //Deep Sleep Breakout
+  setWatch(function() {}, BTN, true);
+  //Set Sleep Indicator
+  setSleepIndicator(LED1);
+  //load gps
+    gps = require("GPS").connect(Serial4, function(data) {
+    console.log(data);
+    //Check if we have a fix
+      if(data.fix>0)
+      {
+        console.log("Send SMS:" + data.lat + "|" + data.lon);
+       // foundFix=1;
+        Stop_GPS();
+      }
+  });
+console.log("Starting up device & Setting timers...");
+setInterval(function (e) { Start_GPS(); }, 120000);
+Start_GPS();
+}
+
+
+onInit();
