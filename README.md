@@ -1,4 +1,4 @@
 Espruino_Tracker
 ================
 
-Espruino Tracker Using Adafruit Ultimate GPS
+Beginnings of the Espruino Tracker.
